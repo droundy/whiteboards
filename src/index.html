@@ -1,0 +1,17 @@
+[%
+
+let title = { "Whiteboards" };
+let body = {
+  r#"
+  <form id="pass-form" action="submit" method="post">
+ <label for="csv">Choose a CSV file:</label>
+ <input type="file"
+        id="csv" name="csv" onchange="this.form.submit()"
+        accept="text/csv, text/plain">
+
+</form>"#
+
+};
+include!("base.html");
+
+%]
