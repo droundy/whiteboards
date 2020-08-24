@@ -1,0 +1,34 @@
+[%
+
+let title = { "Whiteboards for " self.title };
+let body = {
+%]
+<h2>Group assignments:</h2>
+<ol class="overview">
+    [% for g in self.groups.iter() {
+    %] <li> <a href="https://bingley.physics.oregonstate.edu/wbo/boards/[% g.name %]">[% g.name %]</a></li>
+    <ul>
+        [% for s in g.students.iter() { %]
+        <li>[% s.name %]</li>
+        [% } %]
+    </ul>
+    [% } %]
+</ol>
+
+<h2>Overview of boards</h2>
+
+<div class="overview">
+    [% for g in self.groups.iter() { %]
+    <div>
+        <strong><a href="https://bingley.physics.oregonstate.edu//wbo/boards/[% g.name %]">[% g.name %]</a></strong>
+        <div class="aspectratio">
+            <iframe src="https://bingley.physics.oregonstate.edu//wbo/view/[% g.name %]#0,0,0.5"></iframe>
+        </div>
+    </div>
+    [% } %]
+</div>
+[%
+};
+include!("base.html");
+
+%]

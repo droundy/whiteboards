@@ -11,9 +11,13 @@ edition = "2018"
 warp = "0.2.4"
 tokio = { version = "0.2", features = ["full"] }
 serde = { version = "1.0", features = ["derive"] }
+pretty_env_logger = "0.4"
 
 bytes = "0.5"
 futures = "0.3"
+
+csv = "1.1"
+rand = "0.7"
 
 memorable-wordlist = "0.1.6"
 display-as = { version = "0.5.0", features = ["usewarp"] }
