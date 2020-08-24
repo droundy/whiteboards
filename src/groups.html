@@ -3,6 +3,8 @@
 let title = { "Whiteboards for " self.title };
 let body = {
 %]
+
+<a href="zoom.csv" onclick="this.parentNode.removeChild(this);  return true;" download="zoom-preassign.csv">Zoom preassign CSV file</a>
 <h2>Group assignments:</h2>
 <ol class="overview">
     [% for g in self.groups.iter() {

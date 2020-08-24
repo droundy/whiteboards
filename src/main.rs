@@ -35,14 +35,22 @@ struct Groups {
 #[with_template("[%" "%]" "groups.html")]
 impl DisplayAs<HTML> for Groups {}
 
+lazy_static::lazy_static! {
+  static ref ZOOM: std::sync::Mutex<Option<String>> = std::sync::Mutex::new(None);
+}
+
 #[tokio::main]
 async fn main() {
     pretty_env_logger::init();
 
-    // GET /hello/warp => 200 OK with body "Hello, warp!"
-    let overview = warp::path!("overview" / String).map(move |name| {
-        let o = Overview { course_name: name };
-        display(HTML, &o).into_response()
+    let zoom = warp::path!("zoom.csv").map(move || {
+        let s = if let Some(s) = &*ZOOM.lock().unwrap() {
+            s.clone()
+        } else {
+            "You can only download this file once per set of groups.".to_string()
+        };
+        *ZOOM.lock().unwrap() = None;
+        s
     });
 
     use bytes::BufMut;
@@ -147,9 +155,16 @@ async fn main() {
                                 .push(a);
                         }
                     }
+                    use std::fmt::Write;
+                    let mut zoom = String::new();
+                    writeln!(&mut zoom, "\n\nPre-assign Room Name,Email Address").ok();
                     for g in data.groups.iter_mut() {
                         g.students.shuffle(&mut rng);
+                        for s in g.students.iter() {
+                            writeln!(&mut zoom, "{},{}", g.name, s.email).ok();
+                        }
                     }
+                    *ZOOM.lock().unwrap() = Some(zoom);
                     return display(HTML, &data).into_response();
                 }
             }
@@ -157,15 +172,11 @@ async fn main() {
         })
         .with(warp::log("foo"));
 
-    // let submit = warp::path!("submit")
-    //     .and(warp::body::content_length_limit(1024 * 128))
-    //     .and(warp::filters::multipart::form())
-    //     .map(move |x: Submit| format!("{:?}", x));
     let index = warp::path::end()
         .or(path!("index.html"))
         .map(move |_| display(HTML, &Index {}));
 
-    warp::serve(overview.or(submit).or(index))
+    warp::serve(zoom.or(submit).or(index))
         .run(([127, 0, 0, 1], 3030))
         .await;
 }

@@ -1583,6 +1583,7 @@ dependencies = [
  "csv",
  "display-as",
  "futures",
+ "lazy_static",
  "memorable-wordlist",
  "pretty_env_logger",
  "rand 0.7.3",
