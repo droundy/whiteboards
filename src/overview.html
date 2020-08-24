@@ -1,8 +1,22 @@
 [%
 
-let title = { "Whiteboards for " self.course_name };
+let title = { "Whiteboards" };
 let body = {
-  "Here is some content."
+%]
+
+<h2>Overview of boards</h2>
+
+<div class="overview">
+    [% for i in 1..self.n+1 { %]
+    <div>
+        <strong><a href="https://bingley.physics.oregonstate.edu//wbo/boards/[% self.board %]-[% i %]">Group [% i %]</a></strong>
+        <div class="aspectratio">
+            <iframe src="https://bingley.physics.oregonstate.edu//wbo/view/[% self.board %]-[% i %]#0,0,0.5"></iframe>
+        </div>
+    </div>
+    [% } %]
+</div>
+[%
 };
 include!("base.html");
 

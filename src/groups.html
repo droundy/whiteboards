@@ -4,11 +4,12 @@ let title = { "Whiteboards for " self.title };
 let body = {
 %]
 
-<a href="zoom.csv" onclick="this.parentNode.removeChild(this);  return true;" download="zoom-preassign.csv">Zoom preassign CSV file</a>
+<p><a href="zoom.csv" onclick="this.parentNode.removeChild(this);  return true;" download="zoom-preassign.csv">Zoom preassign CSV file</a></p>
+<p><a href="https://bingley.physics.oregonstate.edu/overview/[% self.board %]/[% self.groups.len() %]">Overview page</a></p>
 <h2>Group assignments:</h2>
 <ol class="overview">
     [% for g in self.groups.iter() {
-    %] <li> <a href="https://bingley.physics.oregonstate.edu/wbo/boards/[% g.name %]">[% g.name %]</a></li>
+    %] <li> <a href="https://bingley.physics.oregonstate.edu/wbo/boards/[% g.name %]">Group [% g.num %]</a></li>
     <ul>
         [% for s in g.students.iter() { %]
         <li>[% s.name %]</li>
@@ -22,7 +23,7 @@ let body = {
 <div class="overview">
     [% for g in self.groups.iter() { %]
     <div>
-        <strong><a href="https://bingley.physics.oregonstate.edu//wbo/boards/[% g.name %]">[% g.name %]</a></strong>
+        <strong><a href="https://bingley.physics.oregonstate.edu//wbo/boards/[% g.name %]">Group [% g.num %]</a></strong>
         <div class="aspectratio">
             <iframe src="https://bingley.physics.oregonstate.edu//wbo/view/[% g.name %]#0,0,0.5"></iframe>
         </div>

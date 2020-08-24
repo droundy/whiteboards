@@ -6,7 +6,8 @@ struct Index {}
 #[with_template("[%" "%]" "index.html")]
 impl DisplayAs<HTML> for Index {}
 struct Overview {
-    course_name: String,
+    board: String,
+    n: usize,
 }
 #[with_template("[%" "%]" "overview.html")]
 impl DisplayAs<HTML> for Overview {}
@@ -20,6 +21,7 @@ struct Student {
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 struct Group {
+    num: usize,
     name: String,
     students: Vec<Student>,
 }
@@ -27,6 +29,7 @@ struct Group {
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 struct Groups {
     title: String,
+    board: String,
     min_students: usize,
     students: Vec<Student>,
     absent: Vec<Student>,
@@ -42,6 +45,10 @@ lazy_static::lazy_static! {
 #[tokio::main]
 async fn main() {
     pretty_env_logger::init();
+
+    let overview = warp::path!(String / usize).map(move |board, n| {
+        display(HTML, &Overview { board, n }).into_response()
+    });
 
     let zoom = warp::path!("zoom.csv").map(move || {
         let s = if let Some(s) = &*ZOOM.lock().unwrap() {
@@ -84,8 +91,10 @@ async fn main() {
                 if a == "csv" {
                     println!("got some good {:?}", String::from_utf8_lossy(b));
 
+                    let base = memorable_wordlist::camel_case(40);
                     let mut data = Groups {
                         title: "".to_string(),
+                        board: base.clone(),
                         min_students: 3,
                         students: Vec::new(),
                         absent: Vec::new(),
@@ -124,23 +133,28 @@ async fn main() {
                     let mut students_left = data.students.clone();
                     use rand::seq::SliceRandom;
                     students_left.shuffle(&mut rng);
+                    let mut groupnum = 1;
                     while students_left.len() > 0 {
                         if students_left.len() <= data.min_students + 1 {
                             data.groups.push(Group {
-                                name: memorable_wordlist::camel_case(40),
+                                num: groupnum,
+                                name: format!("{}-{}", base, groupnum),
                                 students: students_left.drain(..).collect(),
                             })
                         } else if students_left.len() % (data.min_students + 1) == 0 {
                             data.groups.push(Group {
-                                name: memorable_wordlist::camel_case(40),
+                                num: groupnum,
+                                name: format!("{}-{}", base, groupnum),
                                 students: students_left.drain(0..data.min_students + 1).collect(),
                             })
                         } else {
                             data.groups.push(Group {
-                                name: memorable_wordlist::camel_case(40),
+                                num: groupnum,
+                                name: format!("{}-{}", base, groupnum),
                                 students: students_left.drain(0..data.min_students).collect(),
                             })
                         }
+                        groupnum += 1;
                     }
                     let mut absent_left = data.absent.clone();
                     absent_left.shuffle(&mut rng);
@@ -176,7 +190,7 @@ async fn main() {
         .or(path!("index.html"))
         .map(move |_| display(HTML, &Index {}));
 
-    warp::serve(zoom.or(submit).or(index))
+    warp::serve(zoom.or(overview).or(submit).or(index))
         .run(([127, 0, 0, 1], 3030))
         .await;
 }
