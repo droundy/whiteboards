@@ -17,6 +17,8 @@ use warp::Reply;
 struct Student {
     name: String,
     email: String,
+    friends: Vec<String>,
+    enemies: Vec<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
@@ -115,16 +117,25 @@ async fn main() {
                                 }
                             } else if x[1] != "" {
                                 println!("{}  ->  {}", x[0], x[1]);
+                                let mut student = Student {
+                                    name: x[0].to_string(),
+                                    email: x[1].to_string(),
+                                    friends: Vec::new(),
+                                    enemies: Vec::new(),
+                                };
+                                if x.len() > 3 {
+                                    for o in x[3..].iter().filter(|o| o.len() > 1) {
+                                        match o.split_at(1) {
+                                            ("-", name) => student.enemies.push(name.to_string()),
+                                            ("+", name) => student.friends.push(name.to_string()),
+                                            _ => (),
+                                        }
+                                    }
+                                }
                                 if x.len() < 3 || x[2] != "absent" {
-                                    data.students.push(Student {
-                                        name: x[0].to_string(),
-                                        email: x[1].to_string(),
-                                    });
+                                    data.students.push(student);
                                 } else {
-                                    data.absent.push(Student {
-                                        name: x[0].to_string(),
-                                        email: x[1].to_string(),
-                                    });
+                                    data.absent.push(student);
                                 }
                             }
                         }
