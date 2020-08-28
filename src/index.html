@@ -24,12 +24,11 @@ select this file with the button above to generate a set of "student" groups for
 can edit this file with any spreadsheet.  I'll quote some small snippets here, as I discuss the fields.
 
 <p>
-  <h6>Metadata</h6>
+  <strong>Metadata</strong>
   The first two lines:
-  <code>
+  <pre>
 title,Example class,,,,,,
-minimum,3,,,,,,
-  </code>
+minimum,3,,,,,,</pre>
   just give a title to the class (Faculty Meeting in this case), and specify the minimum number of
   students per group.  I think 3 is probably a good number here.  The code will actually aim to
   create as many groups as possible that are one over the minimum so as to reduce the total number
@@ -37,12 +36,11 @@ minimum,3,,,,,,
 </p>
 
 <p>
-  <h6>Names and emails</h6>
+  <strong>Names and emails</strong>
   The rest of the file most fundamentally consists of student-visible names followed by email addresses.
-  <code>
+  <pre>
 Heidi,schellmh@oregonstate.edu,,,,,,
-Henri,jansenh@oregonstate.edu,,,,,,
-  </code>
+Henri,jansenh@oregonstate.edu,,,,,,</pre>
   The name here is whatever you want to be visible to students.  I ask students what they like to go by,
   and that is what I'll put here, with initials to disambiguate students with the same name.  The email
   addresses here must be what zoom expects, which I believe is ONID emails, in order for the preassigned
@@ -52,10 +50,9 @@ Henri,jansenh@oregonstate.edu,,,,,,
 </p>
 
 <p>
-  <h6>Absent students</h6>
-  <code>
-Emily,vanzeee@oregonstate.edu,absent,,,,,
-  </code>
+  <strong>Absent students</strong>
+  <pre>
+Emily,vanzeee@oregonstate.edu,absent,,,,,</pre>
   If you put the word "absent" in the third column, the student will be interpreted as unlikely to show
   up.  They will be assigned to a group, but won't count towards the minimum number of students in their
   group.  If you want the student omitted entirely, just don't put them in your file.
@@ -71,11 +68,10 @@ Emily,vanzeee@oregonstate.edu,absent,,,,,
 </p>
 
 <p>
-  <h6>Preferred partners</h6>
-  <code>
+  <strong>Preferred partners</strong>
+  <pre>
 David R,roundyd@oregonstate.edu,,-Mean Person,+David C,,,
-Liz,giree@oregonstate.edu,+Heidi,+Corinne,+David R,+Ethan,+David C,+Janet
-  </code>
+Liz,giree@oregonstate.edu,+Heidi,+Corinne,+David R,+Ethan,+David C,+Janet</pre>
   Each line ends with any number of names preceded by either <samp>+</samp> or  <samp>-</samp>
   The name must precisely match one of the users' assigned names.  If it is preceded by a <samp>+</samp>,
   then the algorithm will prefer to place those students in the same group.    If it is preceded by a <samp>-</samp>,
@@ -95,7 +91,7 @@ Liz,giree@oregonstate.edu,+Heidi,+Corinne,+David R,+Ethan,+David C,+Janet
 </p>
 
 <h3>After you upload the CSV</h3>
-After you upload the CSV file, you will be presented a page with a few pieces of information.
+You will be presented a page with a few pieces of information.
 <p>At the top there
 will be a link to download the Zoom autoassignment CSV file.  You should do so immediately, as the server does
 not store this information long-term, and discards it the next time a set of student groups are generated.
