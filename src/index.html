@@ -2,14 +2,99 @@
 
 let title = { "Creating groups" };
 let body = {
-  r#"
+  %]
   <form id="pass-form" action="submit" method="post" enctype="multipart/form-data">
  <label for="csv">Choose a CSV file:</label>
  <input type="file"
         id="csv" name="csv" onchange="this.form.submit()"
         accept="text/csv, text/plain">
 
-</form>"#
+</form>
+
+<h2>How not to use this</h2>
+If you don't want to use this system to assign students to groups, you can just
+pick a URL of the form
+<a href="/wbo/overview/PickNameHere/10/">https://bingley.physics.oregonstate.edu/wbo/overview/PickNameHere/10/</a>
+where the number at the end is the number of boards that you want to display on the overview.
+
+<h2>How to use this</h2>
+To assign students to groups randomly, you will need to upload a CSV-formatted file representing your
+class roster.  To get started, download <a href="example.csv">this example CSV file</a>.  You can now
+select this file with the button above to generate a set of "student" groups for a faculty meeting.  You
+can edit this file with any spreadsheet.  I'll quote some small snippets here, as I discuss the fields.
+
+<p>
+  <h6>Metadata</h6>
+  The first two lines:
+  <code>
+title,Example class,,,,,,
+minimum,3,,,,,,
+  </code>
+  just give a title to the class (Faculty Meeting in this case), and specify the minimum number of
+  students per group.  I think 3 is probably a good number here.  The code will actually aim to
+  create as many groups as possible that are one over the minimum so as to reduce the total number
+  of breakout rooms.
+</p>
+
+<p>
+  <h6>Names and emails</h6>
+  The rest of the file most fundamentally consists of student-visible names followed by email addresses.
+  <code>
+Heidi,schellmh@oregonstate.edu,,,,,,
+Henri,jansenh@oregonstate.edu,,,,,,
+  </code>
+  The name here is whatever you want to be visible to students.  I ask students what they like to go by,
+  and that is what I'll put here, with initials to disambiguate students with the same name.  The email
+  addresses here must be what zoom expects, which I believe is ONID emails, in order for the preassigned
+  rooms to function properly.  Note also that these emails are <strong>only</strong> used for the zoom
+  preassigned rooms.
+  These lines can contain a few extra possible pieces of information, which I'll discuss below.
+</p>
+
+<p>
+  <h6>Absent students</h6>
+  <code>
+Emily,vanzeee@oregonstate.edu,absent,,,,,
+  </code>
+  If you put the word "absent" in the third column, the student will be interpreted as unlikely to show
+  up.  They will be assigned to a group, but won't count towards the minimum number of students in their
+  group.  If you want the student omitted entirely, just don't put them in your file.
+</p>
+<p>
+  Putting "absent" students into groups like this has two advantages.  Firstly, if the student does indeed
+  end up showing up, they will have a group.  Secondly, if you share the groups with the class on Canvas,
+  you will not be publishing to the class which students are going to be absent.  I intend to mark as "absent"
+  students who are frequently absent, to reduce the chance that any groups will be too small.  The "absent"
+  students are evenly distributed across all groups, with each group guaranteed a minimum number of students
+  who are not marked as absent.  I will also ask students to inform me if they expect to be absent on any
+  given day.
+</p>
+
+<p>
+  <h6>Preferred partners</h6>
+  <code>
+David R,roundyd@oregonstate.edu,,-Mean Person,+David C,,,
+Liz,giree@oregonstate.edu,+Heidi,+Corinne,+David R,+Ethan,+David C,+Janet
+  </code>
+  Each line ends with any number of names preceded by either <samp>+</samp> or  <samp>-</samp>
+  The name must precisely match one of the users' assigned names.  If it is preceded by a <samp>+</samp>,
+  then the algorithm will prefer to place those students in the same group.    If it is preceded by a <samp>-</samp>,
+  then the algorithm will <strong>try very hard</strong>> to avoid placing those students in the same group.
+  <em>Currently it is still possible that the students will be placed in the same group, so if there is an
+    abuse or safety concern, then you must always manually verify that the students have not been placed
+    in the same group!
+  </em>
+</p>
+<p>
+  My plan is to create "Fridays with Friends," in which students are allowed a preference of partners in this
+  way.  This will simulate the in-class pattern where students get to choose where they sit, and hopefully will
+  help in alleviating pandemic-related loneliness and isolation.  I do not intend to allow student preference
+  <em>always</em> because I have concerns both about less popular students who may feel rejected as well as having
+  concerns that working with the same partners could result in some students being more passive in group work,
+  if they always know that their partner will get the correct answer before they do.
+</p>
+
+[%
 
 };
 include!("base.html");

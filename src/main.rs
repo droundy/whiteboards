@@ -1,4 +1,4 @@
-use display_as::{display, with_template, DisplayAs, HTML};
+use display_as::{display, with_template, DisplayAs, HTML, UTF8};
 use serde::Deserialize;
 use warp::{path, Filter};
 
@@ -44,9 +44,16 @@ lazy_static::lazy_static! {
   static ref ZOOM: std::sync::Mutex<Option<String>> = std::sync::Mutex::new(None);
 }
 
+struct ExampleCSV;
+#[with_template("[%" "%]" "example.csv")]
+impl DisplayAs<UTF8> for ExampleCSV {}
+
 #[tokio::main]
 async fn main() {
     pretty_env_logger::init();
+
+    let example = warp::path!("example.csv")
+        .map(move || display(UTF8, &ExampleCSV).into_response());
 
     let overview = warp::path!(String / usize)
         .map(move |board, n| display(HTML, &Overview { board, n }).into_response());
@@ -122,8 +129,8 @@ async fn main() {
                                     friends: Vec::new(),
                                     enemies: Vec::new(),
                                 };
-                                if x.len() > 3 {
-                                    for o in x[3..].iter().filter(|o| o.len() > 1) {
+                                if x.len() > 2 {
+                                    for o in x[2..].iter().filter(|o| o.len() > 1) {
                                         match o.split_at(1) {
                                             ("-", name) => student.enemies.push(name.to_string()),
                                             ("+", name) => student.friends.push(name.to_string()),
@@ -240,7 +247,7 @@ async fn main() {
         .or(path!("index.html"))
         .map(move |_| display(HTML, &Index {}));
 
-    warp::serve(zoom.or(overview).or(submit).or(index))
+    warp::serve(zoom.or(example).or(overview).or(submit).or(index))
         .run(([127, 0, 0, 1], 3030))
         .await;
 }
