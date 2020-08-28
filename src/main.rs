@@ -48,9 +48,8 @@ lazy_static::lazy_static! {
 async fn main() {
     pretty_env_logger::init();
 
-    let overview = warp::path!(String / usize).map(move |board, n| {
-        display(HTML, &Overview { board, n }).into_response()
-    });
+    let overview = warp::path!(String / usize)
+        .map(move |board, n| display(HTML, &Overview { board, n }).into_response());
 
     let zoom = warp::path!("zoom.csv").map(move || {
         let s = if let Some(s) = &*ZOOM.lock().unwrap() {
@@ -144,41 +143,77 @@ async fn main() {
                     let mut students_left = data.students.clone();
                     use rand::seq::SliceRandom;
                     students_left.shuffle(&mut rng);
-                    let mut groupnum = 1;
-                    while students_left.len() > 0 {
-                        if students_left.len() <= data.min_students + 1 {
-                            data.groups.push(Group {
-                                num: groupnum,
-                                name: format!("{}-{}", base, groupnum),
-                                students: students_left.drain(..).collect(),
-                            })
-                        } else if students_left.len() % (data.min_students + 1) == 0 {
-                            data.groups.push(Group {
-                                num: groupnum,
-                                name: format!("{}-{}", base, groupnum),
-                                students: students_left.drain(0..data.min_students + 1).collect(),
-                            })
-                        } else {
-                            data.groups.push(Group {
-                                num: groupnum,
-                                name: format!("{}-{}", base, groupnum),
-                                students: students_left.drain(0..data.min_students).collect(),
-                            })
-                        }
-                        groupnum += 1;
+                    let num_groups = data.students.len() / (data.min_students + 1);
+                    for groupnum in 1..=num_groups + 1 {
+                        data.groups.push(Group {
+                            num: groupnum,
+                            name: format!("{}-{}", base, groupnum),
+                            students: Vec::new(),
+                        })
                     }
-                    let mut absent_left = data.absent.clone();
-                    absent_left.shuffle(&mut rng);
-                    for a in absent_left.into_iter() {
-                        if let Some(smallest) = data.groups.iter().map(|g| g.students.len()).min() {
-                            data.groups
-                                .iter_mut()
-                                .filter(|g| g.students.len() == smallest)
-                                .next()
-                                .unwrap()
-                                .students
-                                .push(a);
-                        }
+                    while students_left.len() > 0 {
+                        let s = students_left.pop().unwrap();
+                        let spots_less_than_min = data
+                            .groups
+                            .iter()
+                            .map(|g| {
+                                if g.students.len() > data.min_students {
+                                    0
+                                } else {
+                                    data.min_students - g.students.len()
+                                }
+                            })
+                            .count();
+                        let min_students = data.min_students;
+                        let is_full = |g: &Group| {
+                            if spots_less_than_min == students_left.len() + 1 {
+                                g.students.len() >= min_students
+                            } else {
+                                g.students.len() >= min_students + 1
+                            }
+                        };
+                        let badness = |g: &Group| -> i64 {
+                            let mut score: i64 = g.students.len() as i64;
+                            if is_full(g) {
+                                score += 10000;
+                            }
+                            for x in g.students.iter() {
+                                if s.enemies.contains(&x.name) || x.enemies.contains(&s.name) {
+                                    score += 100;
+                                }
+                                if s.friends.contains(&x.name) {
+                                    score -= 1;
+                                }
+                                if x.friends.contains(&s.name) {
+                                    score -= 1;
+                                }
+                            }
+                            score
+                        };
+                        data.groups.sort_by_cached_key(badness);
+                        data.groups[0].students.push(s);
+                    }
+                    let mut students_left = data.absent.clone();
+                    students_left.shuffle(&mut rng);
+                    while students_left.len() > 0 {
+                        let s = students_left.pop().unwrap();
+                        let badness = |g: &Group| -> i64 {
+                            let mut score: i64 = 1000*g.students.len() as i64;
+                            for x in g.students.iter() {
+                                if s.enemies.contains(&x.name) || x.enemies.contains(&s.name) {
+                                    score += 100;
+                                }
+                                if s.friends.contains(&x.name) {
+                                    score -= 1;
+                                }
+                                if x.friends.contains(&s.name) {
+                                    score -= 1;
+                                }
+                            }
+                            score
+                        };
+                        data.groups.sort_by_cached_key(badness);
+                        data.groups[0].students.push(s);
                     }
                     use std::fmt::Write;
                     let mut zoom = String::new();
