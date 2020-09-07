@@ -228,7 +228,7 @@ async fn main() {
                     data.groups.sort_by_cached_key(|g| g.num);
                     use std::fmt::Write;
                     let mut zoom = String::new();
-                    writeln!(&mut zoom, "\n\nPre-assign Room Name,Email Address").ok();
+                    writeln!(&mut zoom, "Pre-assign Room Name,Email Address").ok();
                     for g in data.groups.iter_mut() {
                         g.students.shuffle(&mut rng);
                         for s in g.students.iter() {
