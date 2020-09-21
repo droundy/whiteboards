@@ -154,7 +154,7 @@ async fn main() {
                     for groupnum in 1..=num_groups + 1 {
                         data.groups.push(Group {
                             num: groupnum,
-                            name: format!("{}-{}", base, groupnum),
+                            name: format!("{}-{}", groupnum, base),
                             students: Vec::new(),
                         })
                     }
