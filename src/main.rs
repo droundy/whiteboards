@@ -35,6 +35,7 @@ struct Groups {
     min_students: usize,
     students: Vec<Student>,
     absent: Vec<Student>,
+    instructors: Vec<Student>,
     groups: Vec<Group>,
 }
 #[with_template("[%" "%]" "groups.html")]
@@ -105,6 +106,7 @@ async fn main() {
                         board: base.clone(),
                         min_students: 3,
                         students: Vec::new(),
+                        instructors: Vec::new(),
                         absent: Vec::new(),
                         groups: Vec::new(),
                     };
@@ -138,8 +140,10 @@ async fn main() {
                                         }
                                     }
                                 }
-                                if x.len() < 3 || x[2] != "absent" {
+                                if x.len() < 3 || !["absent", "instructor"].contains(&x[2].as_ref()) {
                                     data.students.push(student);
+                                } else if x[2] == "instructor" {
+                                    data.instructors.push(student);
                                 } else {
                                     data.absent.push(student);
                                 }
@@ -234,6 +238,9 @@ async fn main() {
                         for s in g.students.iter() {
                             writeln!(&mut zoom, "{},{}", g.name, s.email).ok();
                         }
+                    }
+                    for i in data.instructors.iter() {
+                        writeln!(&mut zoom, "{},{}", "teaching team", i.email).ok();
                     }
                     *ZOOM.lock().unwrap() = Some(zoom);
                     return display(HTML, &data).into_response();
