@@ -21,5 +21,6 @@ rand = "0.7"
 lazy_static = "1.4"
 
 memorable-wordlist = "0.1.7"
+slug = "0.1.4"
 display-as = { version = "0.5.0", features = ["usewarp"] }
 auto-args = "0.2"

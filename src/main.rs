@@ -119,6 +119,7 @@ async fn main() {
                             let x: Vec<String> = r.iter().map(|x| x.to_string()).collect();
                             if x[0] == "title" {
                                 data.title = x[1].to_string();
+                                data.board = format!("{}-{}", slug::slugify(&data.title), memorable_wordlist::camel_case(30));
                             } else if x[0] == "minimum" {
                                 if let Ok(m) = x[1].parse::<usize>() {
                                     data.min_students = m;
