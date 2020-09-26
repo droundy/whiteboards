@@ -78,13 +78,11 @@ async fn main() {
                 // Collect the fields into (name, value): (String, Vec<u8>)
                 let part: Result<Vec<(String, Vec<u8>)>, warp::Rejection> = form
                     .and_then(|part| {
-                        println!("at the start?");
                         let name = part.name().to_string();
                         let value = part.stream().try_fold(Vec::new(), |mut vec, data| {
                             vec.put(data);
                             async move { Ok(vec) }
                         });
-                        println!("I am processing in the middle...");
                         value.map_ok(move |vec| (name, vec))
                     })
                     .try_collect()
@@ -98,12 +96,9 @@ async fn main() {
         .map(|x: Vec<(String, Vec<u8>)>| {
             for (a, b) in x.iter() {
                 if a == "csv" {
-                    println!("got some good {:?}", String::from_utf8_lossy(b));
-
-                    let base = memorable_wordlist::camel_case(40);
                     let mut data = Groups {
                         title: "".to_string(),
-                        board: base.clone(),
+                        board: memorable_wordlist::camel_case(40),
                         min_students: 3,
                         students: Vec::new(),
                         instructors: Vec::new(),
@@ -120,12 +115,13 @@ async fn main() {
                             if x[0] == "title" {
                                 data.title = x[1].to_string();
                                 data.board = format!("{}-{}", slug::slugify(&data.title), memorable_wordlist::camel_case(30));
+                                println!("setting board to {}", data.board);
                             } else if x[0] == "minimum" {
                                 if let Ok(m) = x[1].parse::<usize>() {
                                     data.min_students = m;
                                 }
                             } else if x[1] != "" {
-                                println!("{}  ->  {}", x[0], x[1]);
+                                // println!("{}  ->  {}", x[0], x[1]);
                                 let mut student = Student {
                                     name: x[0].to_string(),
                                     email: x[1].to_string(),
@@ -151,6 +147,7 @@ async fn main() {
                             }
                         }
                     }
+                    let base = data.board.clone();
                     let mut rng = rand::thread_rng();
                     let mut students_left = data.students.clone();
                     use rand::seq::SliceRandom;
