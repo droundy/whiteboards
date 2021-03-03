@@ -9,9 +9,9 @@ let body = {
 <div class="overview">
     [% for i in 1..self.n+1 { %]
     <div>
-        <strong><a href="https://bingley.physics.oregonstate.edu//wbo/boards/[% i %]-[% self.board %]" target="_blank">Visit group [% i %]</a></strong>
+        <strong><a href="[% self.args.board_url() as URL %]/boards/[% i %]-[% self.board %]" target="_blank">Visit group [% i %]</a></strong>
         <div class="aspectratio">
-            <iframe src="https://bingley.physics.oregonstate.edu//wbo/view/[% i %]-[% self.board %]#0,0,0.5"></iframe>
+            <iframe src="[% self.args.board_url() as URL %]/view/[% i %]-[% self.board %]#0,0,0.5"></iframe>
         </div>
     </div>
     [% } %]

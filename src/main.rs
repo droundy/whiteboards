@@ -1,13 +1,18 @@
-use display_as::{display, with_template, DisplayAs, HTML, UTF8};
+use display_as::{display, format_as, with_template, DisplayAs, HTML, UTF8, URL};
 use serde::Deserialize;
 use warp::{path, Filter};
+use auto_args::AutoArgs;
 
-struct Index {}
+#[derive(Clone)]
+struct Index {
+    args: Args,
+}
 #[with_template("[%" "%]" "index.html")]
 impl DisplayAs<HTML> for Index {}
 struct Overview {
     board: String,
     n: usize,
+    args: Args,
 }
 #[with_template("[%" "%]" "overview.html")]
 impl DisplayAs<HTML> for Overview {}
@@ -37,6 +42,8 @@ struct Groups {
     absent: Vec<Student>,
     instructors: Vec<Student>,
     groups: Vec<Group>,
+    #[serde(skip)]
+    args: Args,
 }
 #[with_template("[%" "%]" "groups.html")]
 impl DisplayAs<HTML> for Groups {}
@@ -49,15 +56,47 @@ struct ExampleCSV;
 #[with_template("[%" "%]" "example.csv")]
 impl DisplayAs<UTF8> for ExampleCSV {}
 
+#[derive(Clone, Debug, PartialEq, Eq, AutoArgs, Default)]
+struct Args {
+    /// The directory in which to find wbo running
+    board: Option<String>,
+    /// The host this is running on
+    host: Option<String>,
+}
+impl Args {
+    fn board_directory<'a>(&'a self) -> impl DisplayAs<URL> + 'a {
+        if let Some(url) = &self.board {
+            url.as_str()
+        } else {
+            "wbo"
+        }
+    }
+    fn board_url<'a>(&'a self) -> impl DisplayAs<URL> + 'a {
+        format_as!(URL, self.host_url() "/" self.board_directory())
+    }
+    fn host_url<'a>(&'a self) -> impl DisplayAs<URL> + 'a {
+        if let Some(url) = &self.host {
+            url.as_str()
+        } else {
+            "https://bingley.physics.oregonstate.edu"
+        }
+    }
+    fn overview_url<'a>(&'a self) -> impl DisplayAs<URL> + 'a {
+        format_as!(URL, self.host_url() "/overview")
+    }
+}
+
 #[tokio::main]
 async fn main() {
+    let args_original = Args::from_args();
     pretty_env_logger::init();
 
     let example = warp::path!("example.csv")
         .map(move || display(UTF8, &ExampleCSV).into_response());
 
+    let args = args_original.clone();
     let overview = warp::path!(String / usize)
-        .map(move |board, n| display(HTML, &Overview { board, n }).into_response());
+        .map(move |board, n| display(HTML, &Overview { board, n, args: args.clone() }).into_response());
 
     let zoom = warp::path!("zoom.csv").map(move || {
         let s = if let Some(s) = &*ZOOM.lock().unwrap() {
@@ -69,6 +108,7 @@ async fn main() {
         s
     });
 
+    let args = args_original.clone();
     use bytes::BufMut;
     use futures::{TryFutureExt, TryStreamExt};
     let submit = warp::path!("submit")
@@ -93,7 +133,7 @@ async fn main() {
                 part
             }
         })
-        .map(|x: Vec<(String, Vec<u8>)>| {
+        .map(move |x: Vec<(String, Vec<u8>)>| {
             for (a, b) in x.iter() {
                 if a == "csv" {
                     let mut data = Groups {
@@ -104,6 +144,7 @@ async fn main() {
                         instructors: Vec::new(),
                         absent: Vec::new(),
                         groups: Vec::new(),
+                        args: args.clone(),
                     };
                     let s = String::from_utf8_lossy(b);
                     let mut rdr = csv::ReaderBuilder::new()
@@ -248,9 +289,10 @@ async fn main() {
         })
         .with(warp::log("foo"));
 
+    let my_index = Index { args: args_original.clone() };
     let index = warp::path::end()
         .or(path!("index.html"))
-        .map(move |_| display(HTML, &Index {}));
+        .map(move |_| display(HTML, &my_index).into_response());
 
     warp::serve(zoom.or(example).or(overview).or(submit).or(index))
         .run(([127, 0, 0, 1], 3030))
