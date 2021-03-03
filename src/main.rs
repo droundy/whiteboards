@@ -60,6 +60,8 @@ impl DisplayAs<UTF8> for ExampleCSV {}
 struct Args {
     /// The directory in which to find wbo running
     board: Option<String>,
+    /// The directory in which to find this code running
+    overview: Option<String>,
     /// The host this is running on
     host: Option<String>,
 }
@@ -69,6 +71,13 @@ impl Args {
             url.as_str()
         } else {
             "wbo"
+        }
+    }
+    fn overview_directory<'a>(&'a self) -> impl DisplayAs<URL> + 'a {
+        if let Some(url) = &self.overview {
+            url.as_str()
+        } else {
+            "overview"
         }
     }
     fn board_url<'a>(&'a self) -> impl DisplayAs<URL> + 'a {
@@ -82,7 +91,7 @@ impl Args {
         }
     }
     fn overview_url<'a>(&'a self) -> impl DisplayAs<URL> + 'a {
-        format_as!(URL, self.host_url() "/overview")
+        format_as!(URL, self.host_url() "/" self.overview_directory())
     }
 }
 

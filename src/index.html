@@ -14,7 +14,7 @@ let body = {
 <h2>How not to use this</h2>
 If you don't want to use this system to assign students to groups, you can just
 pick a URL of the form
-<a href="/overview/PickNameHere/10/">[% self.args.overview_url() as URL %]/PickNameHere/10/</a>
+<a href="[% self.args.overview_url() as URL %]/PickNameHere/10/">[% self.args.overview_url() as URL %]/PickNameHere/10/</a>
 where the number at the end is the number of boards that you want to display on the overview.
 
 <h2>How to use this</h2>
@@ -107,7 +107,7 @@ Downloading this file will also delete the information from the server.</p>
 <p>
   The next bit of ephemeral information is HTML content displayed on the page indicating which students are
   assigned to which groups.  My intent is to copy this from my browser into a Canvas announcement.  This is
-  FERPA-protected information, and therefore is not stored on the bingley server at all.  (Note that one
+  FERPA-protected information, and therefore is not stored on the [% self.args.host_url() as URL %] server at all.  (Note that one
   reason to avoid full names is to reduce the scope of information leaked in case of error.)  I used a similar
   approach in PH 366 for student pairs, and it worked well.  This group listing also has links that each student
   can follow to get to their whiteboard.
