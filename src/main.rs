@@ -59,7 +59,7 @@ impl DisplayAs<UTF8> for ExampleCSV {}
 #[derive(Clone, Debug, PartialEq, Eq, AutoArgs, Default)]
 struct Args {
     /// The directory in which to find wbo running
-    board: Option<String>,
+    wbo: Option<String>,
     /// The directory in which to find this code running
     overview: Option<String>,
     /// The host this is running on
@@ -67,7 +67,7 @@ struct Args {
 }
 impl Args {
     fn board_directory<'a>(&'a self) -> impl DisplayAs<URL> + 'a {
-        if let Some(url) = &self.board {
+        if let Some(url) = &self.wbo {
             url.as_str()
         } else {
             "wbo"
@@ -81,7 +81,7 @@ impl Args {
         }
     }
     fn board_url<'a>(&'a self) -> impl DisplayAs<URL> + 'a {
-        if self.board.as_ref().map(|b| b.as_str()) == Some("") {
+        if self.wbo.as_ref().map(|b| b.as_str()) == Some("") {
             format_as!(URL, self.host_url())
         } else {
             format_as!(URL, self.host_url() "/" self.board_directory())
