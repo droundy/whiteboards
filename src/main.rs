@@ -1,7 +1,7 @@
-use display_as::{display, format_as, with_template, DisplayAs, HTML, UTF8, URL};
+use auto_args::AutoArgs;
+use display_as::{display, format_as, with_template, DisplayAs, HTML, URL, UTF8};
 use serde::Deserialize;
 use warp::{path, Filter};
-use auto_args::AutoArgs;
 
 #[derive(Clone)]
 struct Index {
@@ -81,7 +81,11 @@ impl Args {
         }
     }
     fn board_url<'a>(&'a self) -> impl DisplayAs<URL> + 'a {
-        format_as!(URL, self.host_url() "/" self.board_directory())
+        if self.board.as_ref().map(|b| b.as_str()) == Some("") {
+            format_as!(URL, self.host_url())
+        } else {
+            format_as!(URL, self.host_url() "/" self.board_directory())
+        }
     }
     fn host_url<'a>(&'a self) -> impl DisplayAs<URL> + 'a {
         if let Some(url) = &self.host {
@@ -91,7 +95,11 @@ impl Args {
         }
     }
     fn overview_url<'a>(&'a self) -> impl DisplayAs<URL> + 'a {
-        format_as!(URL, self.host_url() "/" self.overview_directory())
+        if self.overview.as_ref().map(|b| b.as_str()) == Some("") {
+            format_as!(URL, self.host_url())
+        } else {
+            format_as!(URL, self.host_url() "/" self.overview_directory())
+        }
     }
 }
 
@@ -100,12 +108,31 @@ async fn main() {
     let args_original = Args::from_args();
     pretty_env_logger::init();
 
-    let example = warp::path!("example.csv")
-        .map(move || display(UTF8, &ExampleCSV).into_response());
+    let style = path!("style.css").map(|| {
+        const STYLE: &'static str = include_str!("style.css");
+        Ok(warp::http::Response::builder()
+            .status(200)
+            .header("content-length", STYLE.len())
+            .header("content-type", "text/css")
+            .body(STYLE)
+            .unwrap())
+    });
+
+    let example =
+        warp::path!("example.csv").map(move || display(UTF8, &ExampleCSV).into_response());
 
     let args = args_original.clone();
-    let overview = warp::path!(String / usize)
-        .map(move |board, n| display(HTML, &Overview { board, n, args: args.clone() }).into_response());
+    let overview = warp::path!(String / usize).map(move |board, n| {
+        display(
+            HTML,
+            &Overview {
+                board,
+                n,
+                args: args.clone(),
+            },
+        )
+        .into_response()
+    });
 
     let zoom = warp::path!("zoom.csv").map(move || {
         let s = if let Some(s) = &*ZOOM.lock().unwrap() {
@@ -164,7 +191,11 @@ async fn main() {
                             let x: Vec<String> = r.iter().map(|x| x.to_string()).collect();
                             if x[0] == "title" {
                                 data.title = x[1].to_string();
-                                data.board = format!("{}-{}", slug::slugify(&data.title), memorable_wordlist::camel_case(30));
+                                data.board = format!(
+                                    "{}-{}",
+                                    slug::slugify(&data.title),
+                                    memorable_wordlist::camel_case(30)
+                                );
                                 println!("setting board to {}", data.board);
                             } else if x[0] == "minimum" {
                                 if let Ok(m) = x[1].parse::<usize>() {
@@ -187,7 +218,8 @@ async fn main() {
                                         }
                                     }
                                 }
-                                if x.len() < 3 || !["absent", "instructor"].contains(&x[2].as_ref()) {
+                                if x.len() < 3 || !["absent", "instructor"].contains(&x[2].as_ref())
+                                {
                                     data.students.push(student);
                                 } else if x[2] == "instructor" {
                                     data.instructors.push(student);
@@ -257,7 +289,7 @@ async fn main() {
                     while students_left.len() > 0 {
                         let s = students_left.pop().unwrap();
                         let badness = |g: &Group| -> i64 {
-                            let mut score: i64 = 1000*g.students.len() as i64;
+                            let mut score: i64 = 1000 * g.students.len() as i64;
                             for x in g.students.iter() {
                                 if s.enemies.contains(&x.name) || x.enemies.contains(&s.name) {
                                     score += 100;
@@ -298,12 +330,14 @@ async fn main() {
         })
         .with(warp::log("foo"));
 
-    let my_index = Index { args: args_original.clone() };
+    let my_index = Index {
+        args: args_original.clone(),
+    };
     let index = warp::path::end()
         .or(path!("index.html"))
         .map(move |_| display(HTML, &my_index).into_response());
 
-    warp::serve(zoom.or(example).or(overview).or(submit).or(index))
+    warp::serve(zoom.or(style).or(example).or(overview).or(submit).or(index))
         .run(([127, 0, 0, 1], 3030))
         .await;
 }
